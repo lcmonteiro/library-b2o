@@ -1,0 +1,10 @@
+#pragma once
+#include "dual/operations/divides.hpp"
+#include "dual/operations/erf.hpp"
+#include "dual/operations/exp.hpp"
+#include "dual/operations/max.hpp"
+#include "dual/operations/minus.hpp"
+#include "dual/operations/multiplies.hpp"
+#include "dual/operations/negative.hpp"
+#include "dual/operations/plus.hpp"
+#include "dual/operations/sqrt.hpp"
