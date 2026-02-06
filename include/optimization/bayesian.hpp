@@ -11,7 +11,6 @@ template <
     class Model, class Domain, class Functor>
 class bayesian {
  public:
-  using size_t = std::size_t;
   using number_t = typename Model::number_t;
   using sample_t = typename Model::sample_t;
 
@@ -34,7 +33,7 @@ class bayesian {
   auto warmup(size_t steps) -> void {
     auto& [x_best, y_best] = best_;
 
-    for (size_t s = 0; s < steps; ++s) {
+    for (std::size_t s = 0; s < steps; ++s) {
       const auto x_next = domain_.random();
       const auto y_next = functor_(x_next);
       model_.emplace(x_next, y_next);
@@ -48,7 +47,7 @@ class bayesian {
   auto run(size_t steps, config_t config) -> void {
     auto& [x_best, y_best] = best_;
 
-    for (size_t s = 0; s < steps; ++s) {
+    for (std::size_t s = 0; s < steps; ++s) {
       const auto acq = acquisition_t{model_, y_best};
       const auto opt = optimizer_t{acq, config};
 

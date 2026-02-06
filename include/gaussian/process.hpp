@@ -51,7 +51,7 @@ namespace b2o::gaussian {
 //   var(x*) = k(x*, x*) − dot(v,v))
 //
 //
-template <class Kernel, class Number, size_t Dimension>
+template <class Kernel, class Number, std::size_t Dimension>
 class process {
   using Solver = math::cholesky<Number>;
   template <class NumberLike>

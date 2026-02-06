@@ -46,7 +46,7 @@ class radial {
   const number_t denominator_{};
 };
 
-template <class Number, size_t N>
+template <class Number, std::size_t N>
 class radial<std::array<Number, N> > {
   static constexpr auto two = Number{2.0};
   static constexpr auto zero = Number{0.0};
