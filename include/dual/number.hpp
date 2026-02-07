@@ -1,4 +1,5 @@
 #pragma once
+
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -43,11 +44,12 @@ struct number {
   auto operator=(const number&) -> number<T>& = default;
   auto operator=(number&&) -> number<T>& = default;
 
-  // operator const T&() const {
-  // return value_;
-  // }
-  auto size() const -> std::size_t {
-    return dvalue_.size();
+  auto operator=(const value_t& v) {
+    value_ = v;
+  }
+
+  auto operator-=(const value_t& v) {
+    value_ -= v;
   }
 
   auto value() const -> const value_t& {
@@ -65,6 +67,10 @@ struct number {
   auto dvalue(index_t i) const -> const value_t& {
     assert(i < dvalue_.size());
     return dvalue_[i];
+  }
+
+  auto size() const -> std::size_t {
+    return dvalue_.size();
   }
 
  protected:
@@ -91,19 +97,19 @@ inline auto operator<(
   return n1.value() < n2.value();
 }
 template <class T>
-inline auto operator<=(const number<T>& n1, const T& n2)
+inline auto operator<(const number<T>& n1, const T& n2)
     -> bool {
-  return n1.value() <= n2;
+  return n1.value() < n2;
 }
 template <class T>
-inline auto operator<=(const T& n1, const number<T>& n2)
+inline auto operator<(const T& n1, const number<T>& n2)
     -> bool {
-  return n1 <= n2.value();
+  return n1 < n2.value();
 }
 
 template <class U>
-inline auto make_number(const U& value, std::size_t i = 0) {
-  return number{value, i};
+inline auto make_number(const U& init, std::size_t i = 0) {
+  return number{init, i};
 }
 
 template <class U>
@@ -117,15 +123,15 @@ inline auto make_vector(std::size_t n, const U& value) {
 }
 
 template <size_t N, class U, std::size_t... I>
-auto make_array(const U& value, sequence<I...> = {}) {
+inline auto make_array(const U& init, sequence<I...> = {}) {
   if constexpr (sizeof...(I) != N) {
-    return make_array<N>(value, make_sequence<N>{});
+    return make_array<N>(init, make_sequence<N>{});
   } else {
-    return std::array{number{value, I}...};
+    return std::array{number{init, I}...};
   }
 }
 template <class U, size_t N>
-auto make_array(const std::array<U, N>& container) {
+inline auto make_array(const std::array<U, N>& container) {
   auto array = std::array<number<U>, N>{};
   for (std::size_t idx = 0; idx < N; ++idx) {
     array[idx] = number{container[idx], idx};

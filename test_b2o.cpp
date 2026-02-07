@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "builder.hpp"
+#include "print.hpp"
 
 struct branin {
   template <class V>
@@ -38,13 +39,14 @@ int main() {
 
   // Optimization loop
   for (int iter = 0; iter < 100; ++iter) {
-    optimizer.run(1, {0.01, 200});
-    auto [x, y] = optimizer.best();
-    std::cout << iter << " best = " << y << "\n";
+    optimizer.run(1, {100, 0.01, 0.1});
+    auto [_, best] = optimizer.best();
+    print_number("iter", iter);
+    print_number("best", best);
   }
 
   // Report best result
   auto [x_best, y_best] = optimizer.best();
-  std::cout << "x = " << x_best[0] << ", " << x_best[1]
-            << "   y = " << y_best << "\n";
+  print_vector("x_best", x_best);
+  print_number("y_best", y_best);
 }

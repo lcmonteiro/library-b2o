@@ -17,8 +17,8 @@ class bounds {
   using config_t = std::array<range_t, N>;
   using generator_t = std::mt19937;
 
-  explicit bounds(const config_t& c, const input_t& start)
-      : config_{c}, start_{project(start)}, rng_{} {
+  bounds(const config_t& config, const input_t& start)
+      : config_{config}, start_{project(start)}, rng_{} {
     rng_.seed(std::random_device{}());
   }
 

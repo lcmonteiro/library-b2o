@@ -1,5 +1,32 @@
 #pragma once
+
 #include <iostream>
+
+#include "dual/number.hpp"
+
+// ============================================================
+// operator<< for dual::number
+// prints value and derivative values
+// ============================================================
+namespace b2o::dual {
+
+template <typename T>
+auto& operator<<(std::ostream& os, const number<T>& n) {
+  os << n.value() << " [";
+  for (std::size_t i = 0; i < n.size(); ++i) {
+    if (i > 0)
+      os << ", ";
+    os << n.dvalue(i);
+  }
+  os << "]";
+  return os;
+}
+
+}  // namespace b2o::dual
+
+// ============================================================
+// Print Helpers
+// ============================================================
 
 const auto print_number =  //
     [](const auto& name, const auto& number) {
@@ -8,19 +35,20 @@ const auto print_number =  //
 
 const auto print_vector =  //
     [](const auto& name, const auto& vector) {
-      std::cout << name << " = " << "[";
-      for (auto val : vector)
+      std::cout << name << " = [";
+      for (auto&& val : vector)
         std::cout << " " << val;
       std::cout << " ]" << std::endl;
     };
 
 const auto print_matrix =  //
     [](const auto& name, const auto& matrix) {
-      std::cout << name << " = " << "[";
-      for (auto vector : matrix) {
-        std::cout << std::endl;
-        for (auto val : vector)
+      std::cout << name << " = [";
+      for (auto&& row : matrix) {
+        std::cout << std::endl << "  [";
+        for (auto&& val : row)
           std::cout << " " << val;
+        std::cout << " ]";
       }
       std::cout << std::endl << "]" << std::endl;
     };
