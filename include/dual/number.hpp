@@ -44,12 +44,8 @@ struct number {
   auto operator=(const number&) -> number<T>& = default;
   auto operator=(number&&) -> number<T>& = default;
 
-  auto operator=(const value_t& v) {
+  auto value(const value_t& v) -> void {
     value_ = v;
-  }
-
-  auto operator-=(const value_t& v) {
-    value_ -= v;
   }
 
   auto value() const -> const value_t& {

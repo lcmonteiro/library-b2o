@@ -8,10 +8,11 @@
 // operator<< for dual::number
 // prints value and derivative values
 // ============================================================
-namespace b2o::dual {
+namespace b2o {
 
-template <typename T>
-auto& operator<<(std::ostream& os, const number<T>& n) {
+template <class T>
+auto& operator<<(
+    std::ostream& os, const dual::number<T>& n) {
   os << n.value() << " [";
   for (std::size_t i = 0; i < n.size(); ++i) {
     if (i > 0)
@@ -22,12 +23,9 @@ auto& operator<<(std::ostream& os, const number<T>& n) {
   return os;
 }
 
-}  // namespace b2o::dual
-
 // ============================================================
 // Print Helpers
 // ============================================================
-
 const auto print_number =  //
     [](const auto& name, const auto& number) {
       std::cout << name << " = " << number << std::endl;
@@ -52,3 +50,4 @@ const auto print_matrix =  //
       }
       std::cout << std::endl << "]" << std::endl;
     };
+}  // namespace b2o

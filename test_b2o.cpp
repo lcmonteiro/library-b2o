@@ -1,8 +1,7 @@
 #include <array>
-#include <iostream>
 
 #include "builder.hpp"
-#include "print.hpp"
+#include "helpers/print.hpp"
 
 struct branin {
   template <class V>
@@ -28,8 +27,8 @@ int main() {
           .kernel_radial(2.0)
           .domain_bounds(
               std::array{
-                  std::pair{-5.0, 0.0},  //
-                  std::pair{10.0, 15.0}},
+                  std::pair{-5.0, 10.0},  //
+                  std::pair{-10.0, 15.0}},
               std::array{0.0, 0.0})
           .objective(branin{})
           .build();
@@ -39,14 +38,14 @@ int main() {
 
   // Optimization loop
   for (int iter = 0; iter < 100; ++iter) {
-    optimizer.run(1, {100, 0.01, 0.1});
+    optimizer.run(1, {200, 0.01});
     auto [_, best] = optimizer.best();
-    print_number("iter", iter);
-    print_number("best", best);
+    b2o::print_number("iter", iter);
+    b2o::print_number("best", best);
   }
 
   // Report best result
   auto [x_best, y_best] = optimizer.best();
-  print_vector("x_best", x_best);
-  print_number("y_best", y_best);
+  b2o::print_vector("x_best", x_best);
+  b2o::print_number("y_best", y_best);
 }
