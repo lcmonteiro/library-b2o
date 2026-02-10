@@ -4,7 +4,7 @@
 
 #include "dual/number.hpp"
 #include "helpers/functional.hpp"
-
+#include "helpers/print.hpp"
 namespace b2o::optimization {
 
 /// @brief Configuration for gradient descent optimizer
@@ -41,21 +41,40 @@ class gradient {
   }
 
   /// @brief Minimize objective starting from x
-  /// @param x Initial point (modified copy returned)
+  /// @param x Initial point
   /// @return Optimized point
   template <class Input>
-  auto minimize(Input x) const -> Input {
+  auto minimize(Input&& x) const {
     // Lambda to perform a single gradient step
     const auto step = [this](auto& n, auto dv) {
       n -= config_.rate * dv;
     };
+    return optimize(std::forward<Input>(x), step);
+  }
+
+  /// @brief Maximize objective starting from x
+  /// @param x Initial point
+  /// @return Optimized point
+  template <class Input>
+  auto maximize(Input&& x) const {
+    // Lambda to perform a single gradient step
+    const auto step = [this](auto& n, auto dv) {
+      n += config_.rate * dv;
+    };
+    return optimize(std::forward<Input>(x), step);
+  }
+
+ protected:
+  template <class Input, class Step>
+  auto optimize(Input x, Step step) const -> Input {
     // Lambda to check convergence
     const auto done = [this](auto dv) {
       return std::abs(dv) < config_.eps;
     };
     // Lambda to reseed dual numbers
-    const auto seed = [](auto& n, auto v) { n.value(v); };
-
+    const auto seed = [](auto& dn, auto vn) {
+      dn.value(vn);
+    };
     auto dinput = dual::make_array(x);
     for (std::size_t s = 0; s < config_.steps; ++s) {
       const auto dresult = functor_(dinput);
