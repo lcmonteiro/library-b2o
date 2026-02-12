@@ -28,6 +28,8 @@ class bayesian {
         functor_{std::move(functor)},
         best_{domain_.start(), functor_(domain_.start())} {
     model_.emplace(best_);
+    // debug entry
+    debug.print(std::pair{best_.first, best_.second}, model_);
   }
 
   auto best() const -> const sample_t& {

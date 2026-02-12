@@ -27,8 +27,8 @@ int main() {
           .kernel_radial(2.0)
           .domain_bounds(
               std::array{
-                  std::pair{-5.0, 10.0},  //
-                  std::pair{-10.0, 15.0}},
+                  std::pair{-5.0, 15.0},  //
+                  std::pair{-5.0, 15.0}},
               std::array{0.0, 0.0})
           .objective(branin{})
           .build();

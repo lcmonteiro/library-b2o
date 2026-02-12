@@ -5,9 +5,9 @@
 #include <string>
 
 class debug_3d final {
-  static constexpr auto kMin = -10.0;
-  static constexpr auto kMax = 10.0;
-  static constexpr auto kStp = 0.1;
+  static constexpr auto kMin = -5.0;
+  static constexpr auto kMax = 15.0;
+  static constexpr auto kStp = 1.0;
 
  public:
   debug_3d(std::string path) : os_{path} {
@@ -15,7 +15,8 @@ class debug_3d final {
   }
 
   ~debug_3d() {
-    os_ << "]" << std::endl;
+    os_.seekp(-2, std::ios_base::end);
+    os_ << std::endl << "]" << std::endl;
   }
 
   template <class S, class M>
@@ -23,7 +24,8 @@ class debug_3d final {
     os_ << "{ " << std::endl;
     print_sample("s", s);
     print_model("m", m);
-    os_ << "}," << std::endl;
+    os_.seekp(-2, std::ios_base::end);
+    os_ << std::endl << "}," << std::endl;
   }
 
   template <class S, class M, class A>
@@ -32,7 +34,8 @@ class debug_3d final {
     print_sample("s", s);
     print_model("m", m);
     print_function("a", a);
-    os_ << "}," << std::endl;
+    os_.seekp(-2, std::ios_base::end);
+    os_ << std::endl << "}," << std::endl;
   }
 
  protected:
@@ -42,10 +45,10 @@ class debug_3d final {
     std::stringstream sy;
     std::stringstream sz;
     std::stringstream ss;
-    sx << p << "_x" << ":" << "[ ";
-    sy << p << "_y" << ":" << "[ ";
-    sz << p << "_z" << ":" << "[ ";
-    ss << p << "_s" << ":" << "[ ";
+    sx << "\""<< p << "_x" << "\":" << "[ ";
+    sy << "\""<< p << "_y" << "\":" << "[ ";
+    sz << "\""<< p << "_z" << "\":" << "[ ";
+    ss << "\""<< p << "_s" << "\":" << "[ ";
     for (auto x = kMin; x < kMax; x += kStp) {
       for (auto y = kMin; y < kMax; y += kStp) {
         auto [z, s] = m.predict(std::array{x, y});
@@ -55,11 +58,14 @@ class debug_3d final {
         ss << s << ", ";
       }
     }
-    auto [zmax, smax] = m.predict(std::array{kMax, kMax});
-    sx << kMax << " ]," << std::endl;
-    sy << kMax << " ]," << std::endl;
-    sz << zmax << " ]," << std::endl;
-    ss << smax << " ]," << std::endl;
+    sx.seekp(-2, std::ios_base::end);
+    sy.seekp(-2, std::ios_base::end);
+    sz.seekp(-2, std::ios_base::end);
+    ss.seekp(-2, std::ios_base::end);
+    sx << " ]," << std::endl;
+    sy << " ]," << std::endl;
+    sz << " ]," << std::endl;
+    ss << " ]," << std::endl;
     os_ << sx.str() << sy.str() << sz.str() << ss.str();
   }
 
@@ -68,9 +74,9 @@ class debug_3d final {
     std::stringstream sx;
     std::stringstream sy;
     std::stringstream sz;
-    sx << p << "_x" << ":" << "[ ";
-    sy << p << "_y" << ":" << "[ ";
-    sz << p << "_z" << ":" << "[ ";
+    sx << "\""<< p << "_x" << "\":" << "[ ";
+    sy << "\""<< p << "_y" << "\":" << "[ ";
+    sz << "\""<< p << "_z" << "\":" << "[ ";
     for (auto x = kMin; x < kMax; x += kStp) {
       for (auto y = kMin; y < kMax; y += kStp) {
         auto z = f(std::array{x, y});
@@ -79,10 +85,12 @@ class debug_3d final {
         sz << z << ", ";
       }
     }
-    auto zmax = f(std::array{kMax, kMax});
-    sx << kMax << " ]," << std::endl;
-    sy << kMax << " ]," << std::endl;
-    sz << zmax << " ]," << std::endl;
+    sx.seekp(-2, std::ios_base::end);
+    sy.seekp(-2, std::ios_base::end);
+    sz.seekp(-2, std::ios_base::end);
+    sx << " ]," << std::endl;
+    sy << " ]," << std::endl;
+    sz << " ]," << std::endl;
     os_ << sx.str() << sy.str() << sz.str();
   }
 
@@ -90,9 +98,9 @@ class debug_3d final {
   auto print_sample(const Prefix& p, const Sample& s) {
     auto& [u, z] = s;
     auto& [x, y] = u;
-    os_ << p << "_x" << ":" << x << "," << std::endl;
-    os_ << p << "_y" << ":" << y << "," << std::endl;
-    os_ << p << "_z" << ":" << z << "," << std::endl;
+    os_ << "\""<< p << "_x" << "\":" << x << "," << std::endl;
+    os_ << "\""<< p << "_y" << "\":" << y << "," << std::endl;
+    os_ << "\""<< p << "_z" << "\":" << z << "," << std::endl;
   }
 
  private:
