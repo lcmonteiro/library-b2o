@@ -15,7 +15,7 @@ class expected_improvement {
   using model_t = Model;
 
   expected_improvement(const Model& model, Number best)
-      : model_{model}, best_{best} {
+      : model_{model}, best_{best}, distribution_{} {
   }
 
   template <class Input>
