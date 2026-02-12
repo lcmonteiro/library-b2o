@@ -3,7 +3,9 @@
 #include <cstddef>
 #include <utility>
 
-#include "helpers/print.hpp"
+#include "helpers/debug.hpp"
+
+static auto debug = debug_3d{"./bayesian_debug.json"};
 
 namespace b2o::optimization {
 
@@ -43,32 +45,29 @@ class bayesian {
         x_best = x_next;
         y_best = y_next;
       }
+      // debug entry
+      debug.print(std::pair{x_next, y_next}, model_);
     }
   }
 
   auto run(size_t steps, config_t config) -> void {
     auto& [x_best, y_best] = best_;
-    print_vector("best x", x_best);
-    print_number("best y", y_best);
+
     for (std::size_t s = 0; s < steps; ++s) {
       const auto acq = acquisition_t{model_, y_best};
       const auto opt = optimizer_t{acq, config};
 
       const auto x_gen = domain_.generate(x_best);
       const auto x_max = opt.maximize(x_gen);
-      print_vector("acq x", x_max);
-      print_number("acq v", acq(x_max));
-
       const auto x_next = domain_.project(x_max);
       const auto y_next = functor_(x_next);
-      print_vector("next x", x_next);
-      print_number("next y", y_next);
-
       model_.emplace(x_next, y_next);
       if (y_next < y_best) {
         x_best = x_next;
         y_best = y_next;
       }
+      // debug entry
+      debug.print(std::pair{x_next, y_next}, model_, acq);
     }
   }
 

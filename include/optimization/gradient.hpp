@@ -4,7 +4,7 @@
 
 #include "dual/number.hpp"
 #include "helpers/functional.hpp"
-#include "helpers/print.hpp"
+
 namespace b2o::optimization {
 
 /// @brief Configuration for gradient descent optimizer
