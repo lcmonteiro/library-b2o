@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dual/operations/sqrt.hpp"
+#include "dual/operations/log.hpp"
 #include "gaussian/distribution.hpp"
 
 namespace b2o::acquisition {
@@ -22,10 +23,12 @@ class expected_improvement {
   auto operator()(const Input& x) const {
     const auto [mu, var] = model_.predict(x);
     const auto sigma = std::sqrt(var + kJitter);
-    const auto delta = mu - best_;
+    const auto delta = best_ - mu;
     const auto z = delta / sigma;
-    return delta * distribution_.cdf(z) +
-           sigma * distribution_.pdf(z);
+    const auto cdf = distribution_.cdf(z);
+    const auto pdf = distribution_.pdf(z);
+    const auto ei = delta * cdf + sigma * pdf;
+    return std::log(ei + kJitter);
   }
 
  private:

@@ -75,10 +75,14 @@ class gradient {
     const auto seed = [](auto& dn, auto vn) {
       dn.value(vn);
     };
+    print_vector("init", x);
     auto dinput = dual::make_array(x);
     for (std::size_t s = 0; s < config_.steps; ++s) {
       const auto dresult = functor_(dinput);
       each(step, x, dresult.dvalue());
+      print_number("iter", s);
+      print_number("objective", dresult.value());
+      print_vector("gradient", dresult.dvalue());
       if (all(done, dresult.dvalue()))
         break;
       each(seed, dinput, x);

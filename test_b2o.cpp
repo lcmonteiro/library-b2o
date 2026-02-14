@@ -38,7 +38,7 @@ int main() {
 
   // Optimization loop
   for (int iter = 0; iter < 50; ++iter) {
-    optimizer.run(1, {100, 0.01, 0.001});
+    optimizer.run(1, {100, 0.01, 1e-12});
     auto [_, best] = optimizer.best();
     b2o::print_number("iter", iter);
     b2o::print_number("best", best);
