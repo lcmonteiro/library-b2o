@@ -2,7 +2,7 @@
 #include "dual/operations/divides.hpp"
 #include "dual/operations/erf.hpp"
 #include "dual/operations/exp.hpp"
-#include "dual/operations/max.hpp"
+#include "dual/operations/minmax.hpp"
 #include "dual/operations/minus.hpp"
 #include "dual/operations/multiplies.hpp"
 #include "dual/operations/negative.hpp"

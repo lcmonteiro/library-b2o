@@ -4,6 +4,7 @@
 
 #include "dual/number.hpp"
 #include "helpers/functional.hpp"
+#include "helpers/print.hpp"
 
 namespace b2o::optimization {
 
@@ -78,11 +79,12 @@ class gradient {
     print_vector("init", x);
     auto dinput = dual::make_array(x);
     for (std::size_t s = 0; s < config_.steps; ++s) {
+      print_number("iter", s);
       const auto dresult = functor_(dinput);
       each(step, x, dresult.dvalue());
-      print_number("iter", s);
       print_number("objective", dresult.value());
       print_vector("gradient", dresult.dvalue());
+      print_vector("input", x);
       if (all(done, dresult.dvalue()))
         break;
       each(seed, dinput, x);

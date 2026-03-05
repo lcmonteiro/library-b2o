@@ -37,14 +37,13 @@ int main() {
   optimizer.warmup(30);
 
   // Optimization loop
-  for (int iter = 0; iter < 50; ++iter) {
-    optimizer.run(1, {100, 0.01, 1e-12});
+  for (int iter = 0; iter < 10; ++iter) {
+    optimizer.run(1, {10, 0.01, 1e-6});
     auto [_, best] = optimizer.best();
-    b2o::print_number("iter", iter);
-    b2o::print_number("best", best);
+    b2o::print_number(">>>>> epoch :", iter);
+    b2o::print_number(">>>>> best  :", best);
   }
 
-  // Report best result
   auto [x_best, y_best] = optimizer.best();
   b2o::print_vector("x_best", x_best);
   b2o::print_number("y_best", y_best);
