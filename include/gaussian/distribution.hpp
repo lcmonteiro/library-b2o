@@ -22,6 +22,10 @@ struct distribution {
   }
   template <class NumberLike>
   auto log_cdf(const NumberLike& x) const -> NumberLike {
+    return std::log(cdf(x));
+  }
+  template <class NumberLike>
+  auto log_cdf_(const NumberLike& x) const -> NumberLike {
     constexpr auto a = Number{1.702};
     constexpr auto b = Number{0.044715};
     const auto t = a * x + b * x * x * x;

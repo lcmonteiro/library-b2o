@@ -33,18 +33,18 @@ int main() {
           .objective(branin{})
           .build();
 
-  // Warmup phas e
-  optimizer.warmup(30);
+  // Warmup phase
+  auto runner = optimizer.warmup(30);
 
   // Optimization loop
-  for (int iter = 0; iter < 10; ++iter) {
-    optimizer.run(1, {10, 0.01, 1e-6});
-    auto [_, best] = optimizer.best();
+  for (int iter = 0; iter < 50; ++iter) {
+    runner.run(1, {50, 1.0, 1e-6});
+    auto [_, best] = runner.best();
     b2o::print_number(">>>>> epoch :", iter);
     b2o::print_number(">>>>> best  :", best);
   }
 
-  auto [x_best, y_best] = optimizer.best();
+  auto [x_best, y_best] = runner.best();
   b2o::print_vector("x_best", x_best);
   b2o::print_number("y_best", y_best);
 }

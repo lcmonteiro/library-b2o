@@ -6,7 +6,7 @@
 #include "domain/bounds.hpp"
 #include "gaussian/process.hpp"
 #include "kernel/radial.hpp"
-#include "optimization/bayesian.hpp"
+#include "optimization/bayesian/warmer.hpp"
 #include "optimization/gradient.hpp"
 
 namespace b2o {
@@ -32,12 +32,12 @@ class objective_builder {
 
   // Build the final Bayesian optimizer (consumes builder)
   auto build() && {
-    return optimization::bayesian<
+    return optimization::bayesian::warmer<
         acquisition::expected_improvement,
         optimization::gradient,
         Model,
-        Domain,
-        Functor>{
+        Functor,
+        Domain>{
         std::move(model_),
         std::move(domain_),
         std::move(functor_)};

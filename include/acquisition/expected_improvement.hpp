@@ -79,6 +79,7 @@ template <class Model, class Number>
 class expected_improvement {
   static constexpr auto kJitter = Number{1e-12};
   static constexpr auto kMaxRatio = Number{1e20};
+  static constexpr auto kMaxZ = Number{5};
 
  public:
   using distribution_t = gaussian::distribution<Number>;
@@ -93,13 +94,34 @@ class expected_improvement {
   auto operator()(const Input& x) const {
     const auto [mu, var] = model_.predict(x);
     const auto sigma = std::sqrt(var + kJitter);
+    const auto best = compute_best(mu, sigma);
+    // print_number("best_", best_);
+    // print_number("best", best);
+    // print_number("mu", mu);
+    // print_number("sigma", sigma);
+    const auto delta = best - mu;
+    const auto z = delta / sigma;
+    // print_number("z", z);
+    return std::log(
+        delta * distribution_.cdf(z) +
+        sigma * distribution_.pdf(z));
+
+    /*
+    const auto [mu, var] = model_.predict(x);
+    const auto sigma = std::sqrt(var + kJitter);
+    const auto best =
+        compute_best(mu.value(), sigma.value());
+    print_number("best_", best_);
+    print_number("best", best);
     print_number("mu", mu);
     print_number("sigma", sigma);
-    const auto delta = best_ - mu;
+    const auto delta = best - mu;
     const auto z = delta / sigma;
+
     print_number("z", z);
     const auto lpdf = distribution_.log_pdf(z);
     print_number("lpdf", lpdf);
+
     const auto lcdf = distribution_.log_cdf(z);
     print_number("lcdf", lcdf);
     const auto lsigma = std::log(sigma);
@@ -108,13 +130,11 @@ class expected_improvement {
     print_number("lratio", lratio);
     print_number("eratio", std::exp(lratio));
     const auto zratio = z * std::exp(lratio);
-    if (decltype(zratio){kMaxRatio} < zratio) {
-      const auto lei = lsigma + lpdf + lratio + std::log(z);
-      return lei;
-    }
+    assert(zratio < decltype(zratio){kMaxRatio});
     print_number("zratio", zratio);
     const auto lei = lsigma + lpdf + std::log1p(zratio);
     return lei;
+    */
     /*
         const auto sigma = std::sqrt(var + kJitter);
         print_number("sigma", sigma);
@@ -144,6 +164,11 @@ class expected_improvement {
         const auto lei = max_term + std::log(cdf_exp +
        pdf_exp); print_number("lei", lei); return lei;
         */
+  }
+
+ protected:
+  auto compute_best(Number mu, Number sigma) const {
+    return std::max(best_, mu - sigma * kMaxZ);
   }
 
  private:
