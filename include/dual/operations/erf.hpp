@@ -19,11 +19,33 @@ struct erf : unary_operation<erf> {
   static constexpr T two_over_sqrt_pi =
       T{1.12837916709551257389615890312154517L};
 };
+
+struct erfc : unary_operation<erfc> {
+  template <class T>
+  auto value(const T& v) const {
+    return std::erfc(v);
+  }
+  template <class T>
+  auto dvalue(const duo<T>& n) const {
+    return -two_over_sqrt_pi<T> * std::exp(-n.v * n.v) *
+           n.d;
+  }
+
+ private:
+  template <class T>
+  static constexpr T two_over_sqrt_pi =
+      T{1.12837916709551257389615890312154517L};
+};
+
 }  // namespace b2o::dual
 
 namespace std {
 template <class T, b2o::dual::erf::enable_t<T> = 0>
 inline auto erf(const T& n) {
   return std::invoke(b2o::dual::erf{}, n);
+}
+template <class T, b2o::dual::erfc::enable_t<T> = 0>
+inline auto erfc(const T& n) {
+  return std::invoke(b2o::dual::erfc{}, n);
 }
 }  // namespace std
