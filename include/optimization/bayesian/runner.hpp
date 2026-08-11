@@ -1,7 +1,9 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <utility>
+#include <vector>
 
 namespace b2o::optimization::bayesian {
 
@@ -42,14 +44,24 @@ class runner {
     return {best_x, domain_y_.inverse(best_y)};
   }
 
-  void run(std::size_t steps, const config_t& config) {
+  // @param scan_samples Number of cheap (gradient-free)
+  //   acquisition evaluations used to find promising starting
+  //   points before refining any of them.
+  // @param refine_top Number of best-scoring scan candidates
+  //   that get refined via gradient ascent; the highest-scoring
+  //   refined point is used as the next sample.
+  void run(
+      std::size_t steps, const config_t& config,
+      std::size_t scan_samples = 200,
+      std::size_t refine_top = 3) {
     auto& [best_x, best_y] = best_;
 
     for (std::size_t s = 0; s < steps; ++s) {
       acquisition_t acq{model_, best_y};
       optimizer_t opt{acq, config};
 
-      const auto next_x = propose(acq, opt, best_x);
+      const auto next_x = propose(
+          acq, opt, best_x, scan_samples, refine_top);
 
       const auto real_y = functor_(next_x);
       const auto next_y = domain_y_.project(real_y);
@@ -63,24 +75,43 @@ class runner {
   }
 
  protected:
-  // Maximize the acquisition function from several starting
-  // points (one exploiting the current best, the rest
-  // exploring the domain at random) and keep whichever local
-  // optimum scores highest, to avoid getting stuck in the
-  // first local maximum found near the incumbent.
-  static constexpr std::size_t kRestarts = 8;
-
+  // Cheaply score a batch of candidate points (no gradients),
+  // then gradient-refine only the best `refine_top` of them,
+  // keeping whichever refined optimum scores highest. This
+  // gets most of the benefit of multi-start optimization
+  // without paying full gradient-ascent cost per candidate.
   template <class AcqFn, class OptFn, class InputX>
   auto propose(
-      const AcqFn& acq, OptFn& opt, const InputX& best_x)
-      -> InputX {
-    auto next_x = domain_x_.project(
-        opt.maximize(domain_x_.generate(best_x)));
-    auto next_score = acq(next_x);
+      const AcqFn& acq, OptFn& opt, const InputX& best_x,
+      std::size_t scan_samples,
+      std::size_t refine_top) -> InputX {
+    using scored_t = std::pair<number_t, InputX>;
 
-    for (std::size_t r = 1; r < kRestarts; ++r) {
+    auto candidates = std::vector<scored_t>{};
+    candidates.reserve(scan_samples + 1);
+    candidates.emplace_back(acq(best_x), best_x);
+    for (std::size_t i = 0; i < scan_samples; ++i) {
+      auto x = (i % 2 == 0) ? domain_x_.random()
+                             : domain_x_.generate(best_x);
+      candidates.emplace_back(acq(x), std::move(x));
+    }
+
+    const auto top =
+        std::min(refine_top, candidates.size());
+    std::partial_sort(
+        candidates.begin(),
+        candidates.begin() + top,
+        candidates.end(),
+        [](const scored_t& a, const scored_t& b) {
+          return a.first > b.first;
+        });
+
+    auto next_x = domain_x_.project(
+        opt.maximize(candidates.front().second));
+    auto next_score = acq(next_x);
+    for (std::size_t i = 1; i < top; ++i) {
       const auto candidate_x = domain_x_.project(
-          opt.maximize(domain_x_.random()));
+          opt.maximize(candidates[i].second));
       const auto candidate_score = acq(candidate_x);
       if (next_score < candidate_score) {
         next_x = candidate_x;
