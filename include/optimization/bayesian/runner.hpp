@@ -49,9 +49,7 @@ class runner {
       acquisition_t acq{model_, best_y};
       optimizer_t opt{acq, config};
 
-      const auto gen_x = domain_x_.generate(best_x);
-      const auto max_x = opt.maximize(gen_x);
-      const auto next_x = domain_x_.project(max_x);
+      const auto next_x = propose(acq, opt, best_x);
 
       const auto real_y = functor_(next_x);
       const auto next_y = domain_y_.project(real_y);
@@ -63,7 +61,34 @@ class runner {
       }
     }
   }
+
  protected:
+  // Maximize the acquisition function from several starting
+  // points (one exploiting the current best, the rest
+  // exploring the domain at random) and keep whichever local
+  // optimum scores highest, to avoid getting stuck in the
+  // first local maximum found near the incumbent.
+  static constexpr std::size_t kRestarts = 8;
+
+  template <class AcqFn, class OptFn, class InputX>
+  auto propose(
+      const AcqFn& acq, OptFn& opt, const InputX& best_x)
+      -> InputX {
+    auto next_x = domain_x_.project(
+        opt.maximize(domain_x_.generate(best_x)));
+    auto next_score = acq(next_x);
+
+    for (std::size_t r = 1; r < kRestarts; ++r) {
+      const auto candidate_x = domain_x_.project(
+          opt.maximize(domain_x_.random()));
+      const auto candidate_score = acq(candidate_x);
+      if (next_score < candidate_score) {
+        next_x = candidate_x;
+        next_score = candidate_score;
+      }
+    }
+    return next_x;
+  }
 
  private:
   model_t model_;
