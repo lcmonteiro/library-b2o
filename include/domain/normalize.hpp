@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <numeric>
@@ -10,6 +11,8 @@ namespace b2o::domain {
 template <class Number>
 class normalize_builder {
  public:
+  static constexpr auto kMinSigma = Number{1e-6};
+
   class normalize final {
    public:
     auto project(Number value) const -> Number {
@@ -68,7 +71,9 @@ class normalize_builder {
           const auto d = v - mean;
           return d * d;
         });
-    return std::sqrt(sum_sq / static_cast<Number>(cache_.size()));
+    const auto sigma = std::sqrt(
+        sum_sq / static_cast<Number>(cache_.size()));
+    return std::max(sigma, kMinSigma);
   }
 
  private:
