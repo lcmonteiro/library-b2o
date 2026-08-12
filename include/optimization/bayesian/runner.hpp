@@ -71,7 +71,7 @@ class runner {
       acquisition_t acq{model_, best_y};
       optimizer_t opt{acq, config};
 
-      const auto next_x = propose(
+      const auto next_x = select_next_x(
           acq, opt, best_x, scan_samples, refine_top);
 
       const auto real_y = functor_(next_x);
@@ -111,7 +111,7 @@ class runner {
   // gets most of the benefit of multi-start optimization
   // without paying full gradient-ascent cost per candidate.
   template <class AcqFn, class OptFn, class InputX>
-  auto propose(
+  auto select_next_x(
       const AcqFn& acq, OptFn& opt, const InputX& best_x,
       std::size_t scan_samples,
       std::size_t refine_top) -> InputX {
