@@ -48,7 +48,7 @@ class radial {
   }
 
  private:
-  const number_t denominator_{};
+  number_t denominator_{};
 };
 
 template <class Number, std::size_t N>
@@ -92,7 +92,7 @@ class radial<std::array<Number, N> > {
   }
 
  private:
-  const std::array<number_t, N> denominator_{};
+  std::array<number_t, N> denominator_{};
 };
 
 }  // namespace b2o::kernel

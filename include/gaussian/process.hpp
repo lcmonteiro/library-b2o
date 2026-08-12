@@ -102,6 +102,14 @@ class process {
     return std::sqrt(k_noise_);
   }
 
+  auto samples() const -> Samples<Number> {
+    auto result = Samples<Number>{};
+    result.reserve(x_.size());
+    for (std::size_t i = 0; i < x_.size(); ++i)
+      result.emplace_back(x_[i], y_[i]);
+    return result;
+  }
+
   auto emplace(const Input<Number>& x, const Number& y)
       -> void {
     samples_update(x, y);

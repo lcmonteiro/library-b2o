@@ -38,7 +38,7 @@ int main() {
 
   // Optimization loop
   for (int iter = 0; iter < 50; ++iter) {
-    runner.run(1, {80, 0.2, 1e-6}, 200, 3);
+    runner.run(1, {80, 0.2, 1e-6}, 200, 3, 10);
     auto [_, best] = runner.best();
     b2o::print_number(">>>>> epoch :", iter);
     b2o::print_number(">>>>> best  :", best);

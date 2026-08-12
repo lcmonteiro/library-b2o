@@ -2,8 +2,12 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 #include <vector>
+
+#include "gaussian/fit.hpp"
+#include "kernel/radial.hpp"
 
 namespace b2o::optimization::bayesian {
 
@@ -50,10 +54,17 @@ class runner {
   // @param refine_top Number of best-scoring scan candidates
   //   that get refined via gradient ascent; the highest-scoring
   //   refined point is used as the next sample.
+  // @param refit_every For radial-kernel models, re-fit the
+  //   lengthscale to all samples seen so far every time this
+  //   many samples have been added (0 disables re-fitting).
+  //   A single post-warmup fit is prone to noise from the
+  //   small warmup sample; periodic re-fits correct that as
+  //   more data comes in. No-op for other kernel types.
   void run(
       std::size_t steps, const config_t& config,
       std::size_t scan_samples = 200,
-      std::size_t refine_top = 3) {
+      std::size_t refine_top = 3,
+      std::size_t refit_every = 10) {
     auto& [best_x, best_y] = best_;
 
     for (std::size_t s = 0; s < steps; ++s) {
@@ -71,10 +82,29 @@ class runner {
         best_x = next_x;
         best_y = next_y;
       }
+
+      refit(refit_every);
     }
   }
 
  protected:
+  auto refit(std::size_t refit_every) -> void {
+    if constexpr (std::is_same_v<
+                      typename model_t::kernel_t,
+                      kernel::radial<number_t>>) {
+      if (refit_every == 0 ||
+          model_.size() % refit_every != 0)
+        return;
+      const auto history = model_.samples();
+      const auto sigma = gaussian::fit_radial_lengthscale(
+          history, model_.noise(),
+          model_.kernel().sigma());
+      model_ = model_t{
+          kernel::radial<number_t>{sigma}, history,
+          model_.noise()};
+    }
+  }
+
   // Cheaply score a batch of candidate points (no gradients),
   // then gradient-refine only the best `refine_top` of them,
   // keeping whichever refined optimum scores highest. This
