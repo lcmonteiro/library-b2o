@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "dual/operations/base.hpp"
 
 namespace b2o::dual {

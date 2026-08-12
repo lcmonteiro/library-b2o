@@ -100,8 +100,17 @@ class expected_improvement {
     const auto lcdf = distribution_.log_cdf(z);
     const auto lsigma = std::log(sigma);
     const auto lratio = lcdf - lpdf;
-    const auto zratio = z * std::exp(lratio);
-    assert(zratio < decltype(zratio){kMaxRatio});
+    // Deep in the exploitation region (mu far below best_
+    // relative to a small predictive sigma - e.g. right next
+    // to a training point with a tight kernel lengthscale),
+    // z can grow large enough that zratio overflows log1p.
+    // Saturate it instead of letting that propagate as
+    // inf/NaN: past this point log(EI) is already dominated
+    // by lsigma + lpdf anyway.
+    const auto zratio = std::max(
+        std::min(
+            z * std::exp(lratio), decltype(z){kMaxRatio}),
+        decltype(z){-kMaxRatio});
     return lsigma + lpdf + std::log1p(zratio);
   }
 

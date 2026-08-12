@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "dual/operations.hpp"
 
 namespace b2o::math {
@@ -63,12 +65,21 @@ class cholesky {
     auto operator()(
         const VectorA& a,  //
         const VectorB& b,  //
-        const NumberLike init) const {
-      auto sum = init;
+        const NumberLike& init) const {
+      // Accumulate the a[k]*b[k] products on their own
+      // (they share one type) before combining with init,
+      // instead of folding into a variable fixed to init's
+      // type: init and the products can be different types
+      // (e.g. one dual, one plain) when a/b and init come
+      // from different call sites, and init's type may not
+      // be assignable from that combination.
+      using term_t =
+          std::decay_t<decltype(a[beg] * b[beg])>;
+      auto sum = term_t{};
       for (size_t k = beg; k < end; ++k) {
-        sum = sum - a[k] * b[k];
+        sum = sum + a[k] * b[k];
       }
-      return sum;
+      return init - sum;
     }
   };
 

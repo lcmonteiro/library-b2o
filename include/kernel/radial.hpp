@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <tuple>
 
@@ -18,6 +19,10 @@ class radial {
   explicit radial(const Number& sigma)
       : denominator_{two * sigma * sigma} {
     assert(sigma > zero);
+  }
+
+  auto sigma() const -> Number {
+    return std::sqrt(denominator_ / two);
   }
 
   template <class SampleX, class SampleY>

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <iterator>
 #include <numeric>
@@ -73,6 +74,7 @@ class process {
 
  public:
   using number_t = Number;
+  using kernel_t = Kernel;
   using sample_t = Sample<Number>;
 
   template <class Dataset = Samples<Number>>
@@ -90,6 +92,14 @@ class process {
   auto size() const -> size_t {
     assert(k_.size() == l_.size());
     return k_.size();
+  }
+
+  auto kernel() const -> const Kernel& {
+    return k_func_;
+  }
+
+  auto noise() const -> Number {
+    return std::sqrt(k_noise_);
   }
 
   auto emplace(const Input<Number>& x, const Number& y)
