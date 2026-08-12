@@ -74,11 +74,19 @@ struct number {
   }
 
  protected:
+  // Sink parameters: callers with an already-owned (moved-
+  // from-able) index/value vector - the common case, since
+  // every operation builds them fresh - pay no copy here;
+  // callers forced to share a vector they don't own (e.g. a
+  // unary op reusing its operand's dindex_) still pay exactly
+  // one copy, same as before.
   number(
-      const value_t& value,    //
-      const dindex_t& dindex,  //
-      const dvalue_t& dvalue)
-      : value_{value}, dindex_{dindex}, dvalue_{dvalue} {
+      const value_t& value,  //
+      dindex_t dindex,       //
+      dvalue_t dvalue)
+      : value_{value},
+        dindex_{std::move(dindex)},
+        dvalue_{std::move(dvalue)} {
   }
   template <class Derived>
   friend struct unary_operation;

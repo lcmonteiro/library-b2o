@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iterator>
 #include <tuple>
+#include <utility>
 
 #include "dual/number.hpp"
 
@@ -59,15 +60,17 @@ struct binary_operation {
   template <class T>
   auto operator()(const number<T>& n1, const T& v2) const {
     const auto value = this->value(n1.value(), v2);
-    const auto [dindex, dvalue] = this->dvalues(n1, v2);
-    return number<T>{value, dindex, dvalue};
+    auto [dindex, dvalue] = this->dvalues(n1, v2);
+    return number<T>{
+        value, std::move(dindex), std::move(dvalue)};
   }
 
   template <class T>
   auto operator()(const T& v1, const number<T>& n2) const {
     const auto value = this->value(v1, n2.value());
-    const auto [dindex, dvalue] = this->dvalues(v1, n2);
-    return number<T>{value, dindex, dvalue};
+    auto [dindex, dvalue] = this->dvalues(v1, n2);
+    return number<T>{
+        value, std::move(dindex), std::move(dvalue)};
   }
 
   template <class T>
@@ -75,8 +78,9 @@ struct binary_operation {
       const number<T>& n1,  //
       const number<T>& n2) const {
     const auto value = this->value(n1.value(), n2.value());
-    const auto [dindex, dvalue] = this->dvalues(n1, n2);
-    return number<T>{value, dindex, dvalue};
+    auto [dindex, dvalue] = this->dvalues(n1, n2);
+    return number<T>{
+        value, std::move(dindex), std::move(dvalue)};
   }
 
  protected:
@@ -96,7 +100,10 @@ struct binary_operation {
     for (auto i : n.dindex()) {
       dv[i] = self()->dvalue(duo(n, i), v);
     }
-    return std::tuple{n.dindex(), dv};
+    // n.dindex() is n's own vector (n is not ours to move
+    // from), so it's copied here; dv is a fresh local, so it
+    // is moved.
+    return std::tuple{n.dindex(), std::move(dv)};
   }
 
   template <class T>
@@ -106,7 +113,7 @@ struct binary_operation {
     for (auto i : n.dindex()) {
       dv[i] = self()->dvalue(v, duo(n, i));
     }
-    return std::tuple{n.dindex(), dv};
+    return std::tuple{n.dindex(), std::move(dv)};
   }
 
   template <class T>
@@ -134,7 +141,10 @@ struct binary_operation {
           dv[i] = self()->dvalue(duo(n1, i), duo(n2, i));
           di.emplace_back(i);
         });
-    return std::tuple{di, dv};
+    // Both di and dv are freshly built locals (di is a
+    // merge of n1's/n2's indices, not either one directly),
+    // so both move into the tuple.
+    return std::tuple{std::move(di), std::move(dv)};
   }
 
  private:
