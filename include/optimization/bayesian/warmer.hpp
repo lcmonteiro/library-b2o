@@ -2,13 +2,10 @@
 
 #include <cassert>
 #include <cstddef>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "domain/normalize.hpp"
-#include "gaussian/fit.hpp"
-#include "kernel/radial.hpp"
 #include "optimization/bayesian/runner.hpp"
 
 namespace b2o::optimization::bayesian {
@@ -45,6 +42,7 @@ class warmer {
   auto warmup(std::size_t steps) -> runner_t {
     assert(steps > 0);
 
+    model_t model{model_};
     samples_t samples{};
     builder_y_t builder_y{};
     samples.reserve(steps);
@@ -74,49 +72,17 @@ class warmer {
     const auto domain_y = builder_y.build();
 
     // Fill model
-    if constexpr (std::is_same_v<
-                      typename model_t::kernel_t,
-                      kernel::radial<number_t>>) {
-      // Radial kernels have a single lengthscale
-      // hyperparameter: fit it to the warmup data by
-      // maximizing the GP log marginal likelihood instead
-      // of trusting the user-supplied value as-is (it's
-      // only used as the search's starting guess). The
-      // kernel is immutable once built, so the fitted model
-      // is constructed fresh rather than mutated in place.
-      auto fit_samples = samples_t{};
-      fit_samples.reserve(steps);
-      for (std::size_t i = 0; i < steps; ++i) {
-        const auto& [next_x, next_y] = samples[i];
-        fit_samples.emplace_back(
-            next_x, domain_y.project(next_y));
-      }
-      const auto noise = model_.noise();
-      const auto sigma = gaussian::fit_radial_lengthscale(
-          fit_samples, noise, model_.kernel().sigma());
-
-      return runner_t{
-          model_t{
-              kernel::radial<number_t>{sigma}, fit_samples,
-              noise},
-          functor_,
-          domain_x_,
-          domain_y,
-          {best_x, domain_y.project(best_y)}};
-    } else {
-      model_t model{model_};
-      for (std::size_t i = 0; i < steps; ++i) {
-        const auto& [next_x, next_y] = samples[i];
-        model.emplace(next_x, domain_y.project(next_y));
-      }
-
-      return runner_t{
-          std::move(model),
-          functor_,
-          domain_x_,
-          domain_y,
-          {best_x, domain_y.project(best_y)}};
+    for (std::size_t i = 0; i < steps; ++i) {
+      const auto& [next_x, next_y] = samples[i];
+      model.emplace(next_x, domain_y.project(next_y));
     }
+
+    return runner_t{
+        std::move(model),
+        functor_,
+        domain_x_,
+        domain_y,
+        {best_x, domain_y.project(best_y)}};
   }
 
  private:

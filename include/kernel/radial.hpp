@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <tuple>
 
@@ -19,10 +18,6 @@ class radial {
   explicit radial(const Number& sigma)
       : denominator_{two * sigma * sigma} {
     assert(sigma > zero);
-  }
-
-  auto sigma() const -> Number {
-    return std::sqrt(denominator_ / two);
   }
 
   template <class SampleX, class SampleY>
@@ -48,7 +43,7 @@ class radial {
   }
 
  private:
-  number_t denominator_{};
+  const number_t denominator_{};
 };
 
 template <class Number, std::size_t N>
@@ -92,7 +87,7 @@ class radial<std::array<Number, N> > {
   }
 
  private:
-  std::array<number_t, N> denominator_{};
+  const std::array<number_t, N> denominator_{};
 };
 
 }  // namespace b2o::kernel
