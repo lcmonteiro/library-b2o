@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+#include <cstddef>
 #include <utility>
 
 #include "dual/number.hpp"
@@ -21,6 +23,14 @@ struct gradient_config {
 template <class Number>
 gradient_config(std::size_t, Number, Number)
     -> gradient_config<Number>;
+
+/// @brief Default projection (unconstrained)
+struct identity {
+  template <class Input>
+  auto operator()(Input&& x) const -> Input&& {
+    return std::forward<Input>(x);
+  }
+};
 
 /// @brief Gradient descent optimizer using forward-mode
 /// autodiff
@@ -44,30 +54,44 @@ class gradient {
   /// @brief Minimize objective starting from x
   /// @param x Initial point
   /// @return Optimized point
-  template <class Input>
-  auto minimize(Input&& x) const {
+  template <class Input, class Project = identity>
+  auto minimize(Input&& x, Project project = {}) const {
     // Lambda to perform a single gradient step
-    const auto step = [this](auto& n, auto dv) {
-      n -= config_.rate * dv;
+    const auto step = [](auto& n, auto dv, auto rate) {
+      n -= rate * dv;
     };
-    return optimize(std::forward<Input>(x), step);
+    return optimize(std::forward<Input>(x), step, project);
   }
 
   /// @brief Maximize objective starting from x
   /// @param x Initial point
   /// @return Optimized point
-  template <class Input>
-  auto maximize(Input&& x) const {
+  template <class Input, class Project = identity>
+  auto maximize(Input&& x, Project project = {}) const {
     // Lambda to perform a single gradient step
-    const auto step = [this](auto& n, auto dv) {
-      n += config_.rate * dv;
+    const auto step = [](auto& n, auto dv, auto rate) {
+      n += rate * dv;
     };
-    return optimize(std::forward<Input>(x), step);
+    return optimize(std::forward<Input>(x), step, project);
   }
 
  protected:
-  template <class Input, class Step>
-  auto optimize(Input x, Step step) const -> Input {
+  /// @brief Step size with the gradient norm clipped
+  /// to one, so steep regions can not throw the iterate
+  /// far away from the current point.
+  template <class Gradient>
+  auto clipped_rate(const Gradient& dv) const -> number_t {
+    auto norm = number_t{0};
+    for (const auto& d : dv)
+      norm += d * d;
+    norm = std::sqrt(norm);
+    return norm > number_t{1} ? config_.rate / norm
+                              : config_.rate;
+  }
+
+  template <class Input, class Step, class Project>
+  auto optimize(Input x, Step step, Project project) const
+      -> Input {
     // Lambda to check convergence
     const auto done = [this](auto dv) {
       return std::abs(dv) < config_.eps;
@@ -81,7 +105,12 @@ class gradient {
     for (std::size_t s = 0; s < config_.steps; ++s) {
       // print_number("iter", s);
       const auto dresult = functor_(dinput);
-      each(step, x, dresult.dvalue());
+      const auto rate = clipped_rate(dresult.dvalue());
+      each(
+          [&](auto& n, auto dv) { step(n, dv, rate); },
+          x,
+          dresult.dvalue());
+      x = project(x);
       // print_number("objective", dresult.value());
       // print_vector("gradient", dresult.dvalue());
       // print_vector("input", x);
