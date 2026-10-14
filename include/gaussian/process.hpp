@@ -69,7 +69,7 @@ class process {
   template <class NumberLike>
   using Result = std::pair<Number, Number>;
 
-  static constexpr auto kJitter = 1e-12;
+  static constexpr auto kJitter = 1e-6;
 
  public:
   using number_t = Number;

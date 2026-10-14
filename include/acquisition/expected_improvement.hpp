@@ -96,9 +96,16 @@ class expected_improvement {
     const auto best = compute_best(mu, sigma);
     const auto delta = best - mu;
     const auto z = delta / sigma;
+    const auto lsigma = std::log(sigma);
+    if (!(z < Number{0})) {
+      // z >= 0: z Φ(z) + φ(z) >= z, no cancellation, and
+      // Φ(z)/φ(z) would overflow for large z.
+      const auto pdf = distribution_.pdf(z);
+      const auto cdf = distribution_.cdf(z);
+      return lsigma + std::log(z * cdf + pdf);
+    }
     const auto lpdf = distribution_.log_pdf(z);
     const auto lcdf = distribution_.log_cdf(z);
-    const auto lsigma = std::log(sigma);
     const auto lratio = lcdf - lpdf;
     const auto zratio = z * std::exp(lratio);
     assert(zratio < decltype(zratio){kMaxRatio});

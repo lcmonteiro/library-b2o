@@ -42,6 +42,13 @@ class bounds {
     constexpr auto zero = Number{0};
     constexpr auto one = Number{1};
     return build(center, [this](auto x, auto lo, auto hi) {
+      // piecewise_linear_distribution requires strictly
+      // increasing points: fall back to uniform when the
+      // center sits on a bound.
+      if (!(lo < x && x < hi)) {
+        std::uniform_real_distribution<Number> dist(lo, hi);
+        return dist(rng_);
+      }
       const auto points = std::array{lo, x, hi};
       const auto weights = std::array{zero, one, zero};
       std::piecewise_linear_distribution<Number> dist{
